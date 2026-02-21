@@ -44,35 +44,40 @@ export default function MatchDetail() {
         );
     }
 
-    const handleJoin = () => {
+    const handleJoin = async () => {
         setJoining(true);
-        // Simulate API call to join match
-        setTimeout(() => {
-            setJoining(false);
+        try {
+            await api.joinMatch(match!.id.toString(), 1); // Mocking user ID 1 for now
+            const updatedMatch = await api.getMatchById(match!.id.toString());
+            setMatch(updatedMatch);
             setJoined(true);
-        }, 800);
+        } catch (error) {
+            console.error("Error uniéndose:", error);
+        } finally {
+            setJoining(false);
+        }
     };
 
-    const isFull = match.players.length >= match.requiredPlayers;
-    const canJoin = !isFull && !joined && match.currentState === "NecesitamosJugadores";
+    const isFull = (match.jugadoresEnlistados?.length || 0) >= match.cantidadJugadoresReq;
+    const canJoin = !isFull && !joined && match.estadoActualType === "NECESITAMOS_JUGADORES";
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-bold text-white tracking-tight">{match.sport}</h1>
-                        <Badge variant="outline">{match.minSkillLevel || "Todos los niveles"}</Badge>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{match.deporte}</h1>
+                        <Badge variant="outline">{match.nivelRequerido || "Todos los niveles"}</Badge>
                     </div>
                     <p className="text-textMuted flex items-center gap-2">
-                        <MapPin className="h-4 w-4" /> {match.location}
+                        <MapPin className="h-4 w-4" /> {match.ubicacion}
                     </p>
                 </div>
 
                 <div className="flex items-center gap-4 bg-surface p-4 rounded-xl border border-border">
                     <div className="text-center">
                         <div className="text-2xl font-bold text-primary">
-                            {match.players.length} <span className="text-textMuted text-lg font-normal">/ {match.requiredPlayers}</span>
+                            {match.jugadoresEnlistados?.length || 0} <span className="text-textMuted text-lg font-normal">/ {match.cantidadJugadoresReq}</span>
                         </div>
                         <div className="text-xs text-textMuted uppercase tracking-wider">Jugadores</div>
                     </div>
@@ -108,7 +113,7 @@ export default function MatchDetail() {
                                     </div>
                                     <div>
                                         <h4 className="font-medium text-white">Fecha</h4>
-                                        <p className="text-sm text-textMuted">{new Date(match.date).toLocaleDateString()}</p>
+                                        <p className="text-sm text-textMuted">{new Date(match.horario).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
@@ -118,9 +123,9 @@ export default function MatchDetail() {
                                     <div>
                                         <h4 className="font-medium text-white">Hora y Duración</h4>
                                         <p className="text-sm text-textMuted">
-                                            {new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(match.horario).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             <span className="mx-2">•</span>
-                                            {match.durationMinutes} minutos
+                                            {match.duracionMinutos} minutos
                                         </p>
                                     </div>
                                 </div>
@@ -133,8 +138,7 @@ export default function MatchDetail() {
                                     <div>
                                         <h4 className="font-medium text-white">Nivel Requerido</h4>
                                         <p className="text-sm text-textMuted">
-                                            {match.minSkillLevel ? `Mínimo: ${match.minSkillLevel}` : "Para todos los niveles"}
-                                            {match.maxSkillLevel && ` - Máximo: ${match.maxSkillLevel}`}
+                                            {match.nivelRequerido ? `Nivel: ${match.nivelRequerido}` : "Para todos los niveles"}
                                         </p>
                                     </div>
                                 </div>
@@ -147,35 +151,35 @@ export default function MatchDetail() {
                             <div>
                                 <CardTitle>Jugadores Confirmados</CardTitle>
                                 <CardDescription>
-                                    Faltan {Math.max(0, match.requiredPlayers - match.players.length)} jugadores
+                                    Faltan {Math.max(0, match.cantidadJugadoresReq - (match.jugadoresEnlistados?.length || 0))} jugadores
                                 </CardDescription>
                             </div>
                             <Users className="h-5 w-5 text-textMuted" />
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {match.players.map((player, idx) => (
+                                {(match.jugadoresEnlistados || []).map((player, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-border flex items-center justify-center font-bold text-primary">
-                                                {player.username.charAt(0).toUpperCase()}
+                                                {player.nombreUsuario.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-white text-sm">{player.username}</p>
-                                                {player.id === match.organizerId && (
+                                                <p className="font-medium text-white text-sm">{player.nombreUsuario}</p>
+                                                {player.id === match.creador?.id && (
                                                     <span className="text-[10px] uppercase text-primary font-bold">Organizador</span>
                                                 )}
                                             </div>
                                         </div>
-                                        {player.skillLevel && (
+                                        {player.nivel && (
                                             <Badge variant="secondary" className="text-xs font-normal">
-                                                {player.skillLevel}
+                                                {player.nivel}
                                             </Badge>
                                         )}
                                     </div>
                                 ))}
 
-                                {Array.from({ length: Math.max(0, match.requiredPlayers - match.players.length) }).map((_, idx) => (
+                                {Array.from({ length: Math.max(0, match.cantidadJugadoresReq - (match.jugadoresEnlistados?.length || 0)) }).map((_, idx) => (
                                     <div key={`empty-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border/60 opacity-60">
                                         <div className="h-10 w-10 rounded-full bg-border/50 flex items-center justify-center">
                                             <Users className="h-5 w-5 text-textMuted" />
@@ -199,23 +203,23 @@ export default function MatchDetail() {
                             <div className="space-y-4">
                                 <StatusStep
                                     label="Necesitamos Jugadores"
-                                    isActive={match.currentState === "NecesitamosJugadores" || isFull}
+                                    isActive={match.estadoActualType === "NECESITAMOS_JUGADORES" || isFull}
                                     isCompleted={isFull}
                                 />
                                 <StatusStep
                                     label="Partido Armado"
-                                    isActive={match.currentState === "PartidoArmado"}
-                                    isCompleted={match.currentState !== "NecesitamosJugadores" && match.currentState !== "PartidoArmado"}
+                                    isActive={match.estadoActualType === "PARTIDO_ARMADO"}
+                                    isCompleted={match.estadoActualType !== "NECESITAMOS_JUGADORES" && match.estadoActualType !== "PARTIDO_ARMADO"}
                                 />
                                 <StatusStep
                                     label="Confirmado"
-                                    isActive={match.currentState === "Confirmado"}
-                                    isCompleted={match.currentState === "EnJuego" || match.currentState === "Finalizado"}
+                                    isActive={match.estadoActualType === "CONFIRMADO"}
+                                    isCompleted={match.estadoActualType === "EN_JUEGO" || match.estadoActualType === "FINALIZADO"}
                                 />
                                 <StatusStep
                                     label="En Juego"
-                                    isActive={match.currentState === "EnJuego"}
-                                    isCompleted={match.currentState === "Finalizado"}
+                                    isActive={match.estadoActualType === "EN_JUEGO"}
+                                    isCompleted={match.estadoActualType === "FINALIZADO"}
                                 />
                             </div>
                         </CardContent>

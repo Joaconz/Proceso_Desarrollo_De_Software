@@ -1,56 +1,70 @@
-import type { Match } from "../types";
+import type { Match, User } from "../types";
 
-export const mockMatches: Match[] = [
-    {
-        id: "1",
-        sport: "Futbol",
-        requiredPlayers: 10,
-        durationMinutes: 60,
-        location: "Cancha El Trébol, Palermo",
-        date: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        currentState: "NecesitamosJugadores",
-        minSkillLevel: "Intermedio",
-        players: [
-            { id: "u1", username: "juanperez", email: "juan@test.com", skillLevel: "Avanzado" },
-            { id: "u2", username: "marting", email: "martin@test.com", skillLevel: "Intermedio" },
-        ],
-        organizerId: "u1",
-    },
-    {
-        id: "2",
-        sport: "Basquet",
-        requiredPlayers: 10,
-        durationMinutes: 90,
-        location: "Club Atlético, Belgrano",
-        date: new Date(Date.now() + 172800000).toISOString(), // 2 days from now
-        currentState: "PartidoArmado",
-        players: Array(10).fill({ id: "mock", username: "Jugador Anónimo", email: "anon@test.com" }),
-        organizerId: "u3",
-    },
-    {
-        id: "3",
-        sport: "Tenis",
-        requiredPlayers: 4,
-        durationMinutes: 120,
-        location: "Complejo Las Rejas",
-        date: new Date(Date.now() + 43200000).toISOString(), // 12 hours from now
-        currentState: "Confirmado",
-        minSkillLevel: "Avanzado",
-        players: Array(4).fill({ id: "mock", username: "Pro Player", email: "pro@test.com" }),
-        organizerId: "u4",
-    }
-];
-
-// Helper to simulate API calls
 export const api = {
-    getMatches: async (): Promise<Match[]> => {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(mockMatches), 600);
+    // ---- Usuarios ----
+    login: async (credentials: any): Promise<User> => {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
         });
+        if (!response.ok) throw new Error("Login fallido");
+        return response.json();
     },
-    getMatchById: async (id: string): Promise<Match | undefined> => {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(mockMatches.find(m => m.id === id)), 400);
+
+    register: async (userData: any): Promise<User> => {
+        const response = await fetch('/api/usuarios/registro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
         });
+        if (!response.ok) throw new Error("Registro fallido");
+        return response.json();
+    },
+
+    // ---- Partidos ----
+    getMatches: async (): Promise<Match[]> => {
+        const response = await fetch('/api/partidos');
+        if (!response.ok) throw new Error("Error obteniendo partidos");
+        return response.json();
+    },
+
+    getMatchById: async (id: string): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${id}`);
+        if (!response.ok) throw new Error("Error obteniendo el detalle");
+        return response.json();
+    },
+
+    createMatch: async (matchData: any): Promise<Match> => {
+        const response = await fetch('/api/partidos/crear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(matchData)
+        });
+        if (!response.ok) throw new Error("Falló la creación del partido");
+        return response.json();
+    },
+
+    joinMatch: async (matchId: string, userId: string | number): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/unirse/${userId}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "Error uniéndose al partido");
+        }
+        return response.json();
+    },
+
+    confirmMatch: async (matchId: string): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/confirmar`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede confirmar");
+        }
+        return response.json();
     }
 };

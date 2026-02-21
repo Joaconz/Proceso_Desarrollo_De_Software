@@ -4,20 +4,26 @@ import { CopySlash } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/Card";
+import { api } from "../services/api";
 
 export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-    const onSubmit = (e: React.FormEvent) => {
+    const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            await api.login({ correo: email, contrasenia: password });
             navigate("/");
-        }, 1000);
+        } catch (error) {
+            console.error("Error validando usuario");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -44,6 +50,8 @@ export default function Login() {
                                 id="email"
                                 type="email"
                                 placeholder="m@ejemplo.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
@@ -56,7 +64,7 @@ export default function Login() {
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                             </div>
-                            <Input id="password" type="password" required />
+                            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">

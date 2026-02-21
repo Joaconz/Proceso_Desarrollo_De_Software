@@ -4,20 +4,33 @@ import { CopySlash } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/Card";
+import { api } from "../services/api";
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const onSubmit = (e: React.FormEvent) => {
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            await api.register({
+                nombreUsuario: username,
+                correo: email,
+                contrasenia: password,
+                nivel: "PRINCIPIANTE" // default values
+            });
+            navigate("/login");
+        } catch (error) {
+            console.error("Error creating user");
+        } finally {
             setIsLoading(false);
-            navigate("/profile");
-        }, 1000);
+        }
     };
 
     return (
@@ -44,6 +57,8 @@ export default function Register() {
                                 id="username"
                                 type="text"
                                 placeholder="tuusuario123"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 required
                             />
                         </div>
@@ -55,6 +70,8 @@ export default function Register() {
                                 id="email"
                                 type="email"
                                 placeholder="m@ejemplo.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
@@ -62,7 +79,7 @@ export default function Register() {
                             <label htmlFor="password" className="text-sm font-medium leading-none text-white">
                                 Contraseña
                             </label>
-                            <Input id="password" type="password" required />
+                            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">
