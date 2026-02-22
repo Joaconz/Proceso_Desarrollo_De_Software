@@ -45,9 +45,13 @@ export const api = {
     },
 
     getMatchById: async (id: string): Promise<Match> => {
-        const response = await fetch(`/api/partidos/${id}`);
-        if (!response.ok) throw new Error("Error obteniendo el detalle");
-        return response.json();
+        // Fallback: The backend GET /api/partidos/{id} endpoint throws a 500 error 
+        // due to Jackson infinite recursion on bidirectional bindings (Users <-> Match).
+        // Since getMatches() works cleanly without nested payload limits, we fetch and filter in-memory.
+        const allMatches = await api.getMatches();
+        const found = allMatches.find(m => m.id.toString() === id.toString());
+        if (!found) throw new Error("Match no encontrado");
+        return found;
     },
 
     createMatch: async (matchData: any): Promise<Match> => {
