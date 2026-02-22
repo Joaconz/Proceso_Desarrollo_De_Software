@@ -1,31 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/Card";
 import { api } from "../services/api";
-import type { Sport, SkillLevel } from "../types";
+import type { Deporte, SkillLevel } from "../types";
 
 
 export default function CreateMatch() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
 
+    // Metadata State
+    const [sportsOptions, setSportsOptions] = useState<Deporte[]>([]);
+    const [skillsOptions, setSkillsOptions] = useState<SkillLevel[]>([]);
+
     // Form State
-    const [sport, setSport] = useState<Sport>("Fútbol");
+    const [sportId, setSportId] = useState<number | "">("");
     const [requiredPlayers, setRequiredPlayers] = useState(10);
     const [location, setLocation] = useState("");
     const [date, setDate] = useState("");
     const [duration, setDuration] = useState(60);
     const [minSkill, setMinSkill] = useState<SkillLevel | "">("");
 
+    useEffect(() => {
+        api.getDeportes().then(setSportsOptions).catch(console.error);
+        api.getNiveles().then(setSkillsOptions).catch(console.error);
+    }, []);
+
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!sportId) return;
+
         setIsLoading(true);
 
         try {
             await api.createMatch({
-                deporte: sport,
+                deporte: { id: sportId },
                 cantidadJugadoresReq: requiredPlayers,
                 duracionMinutos: duration,
                 ubicacion: location,
@@ -60,16 +71,14 @@ export default function CreateMatch() {
                                 <label className="text-sm font-medium text-white">Deporte</label>
                                 <select
                                     className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                                    value={sport}
-                                    onChange={(e) => setSport(e.target.value as Sport)}
+                                    value={sportId}
+                                    onChange={(e) => setSportId(Number(e.target.value))}
                                     required
                                 >
                                     <option value="" disabled>Selecciona un deporte</option>
-                                    <option value="Fútbol">Fútbol</option>
-                                    <option value="Básquet">Básquet</option>
-                                    <option value="Vóley">Vóley</option>
-                                    <option value="Tenis">Tenis</option>
-                                    <option value="Pádel">Pádel</option>
+                                    {sportsOptions.map(s => (
+                                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -77,12 +86,23 @@ export default function CreateMatch() {
                                 <label className="text-sm font-medium text-white">Jugadores Requeridos</label>
                                 <Input
                                     type="number"
-                                    min="2" max="22"
-                                    placeholder="Ej: 10"
+                                    min="2" max={sportsOptions.find(s => s.id === sportId)?.cantidadJugadoresPermitidos || 22}
+                                    placeholder={`Ej: ${sportsOptions.find(s => s.id === sportId)?.cantidadJugadoresPermitidos || 10}`}
                                     value={requiredPlayers}
-                                    onChange={(e) => setRequiredPlayers(Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const val = Number(e.target.value);
+                                        const max = sportsOptions.find(s => s.id === sportId)?.cantidadJugadoresPermitidos || 22;
+                                        if (val <= max) {
+                                            setRequiredPlayers(val);
+                                        }
+                                    }}
                                     required
                                 />
+                                {sportId && (
+                                    <p className="text-xs text-textMuted mt-1">
+                                        Máximo permitido por deporte: {sportsOptions.find(s => s.id === sportId)?.cantidadJugadoresPermitidos}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -120,18 +140,34 @@ export default function CreateMatch() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <label className="text-sm font-medium text-white">Nivel Mínimo (Opcional)</label>
-                                <select
-                                    className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                                    value={minSkill}
-                                    onChange={(e) => setMinSkill(e.target.value as SkillLevel | "")}
-                                >
-                                    <option value="">Cualquiera</option>
-                                    <option value="PRINCIPIANTE">Principiante</option>
-                                    <option value="INTERMEDIO">Intermedio</option>
-                                    <option value="AVANZADO">Avanzado</option>
-                                </select>
+                                <div className="flex flex-wrap gap-4 mt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="nivel"
+                                            value=""
+                                            checked={minSkill === ""}
+                                            onChange={(e) => setMinSkill(e.target.value as "" | SkillLevel)}
+                                            className="w-4 h-4 text-primary bg-surface border-border focus:ring-primary focus:ring-1"
+                                        />
+                                        <span className="text-sm text-textMuted">Cualquiera</span>
+                                    </label>
+                                    {skillsOptions.map(skill => (
+                                        <label key={skill} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="nivel"
+                                                value={skill}
+                                                checked={minSkill === skill}
+                                                onChange={(e) => setMinSkill(e.target.value as SkillLevel)}
+                                                className="w-4 h-4 text-primary bg-surface border-border focus:ring-primary focus:ring-1"
+                                            />
+                                            <span className="text-sm text-textMuted">{skill}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </CardContent>

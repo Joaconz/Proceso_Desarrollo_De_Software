@@ -1,4 +1,8 @@
-export type Sport = "Fútbol" | "Básquet" | "Vóley" | "Tenis" | "Pádel";
+export interface Deporte {
+    id: number;
+    nombre: string;
+    cantidadJugadoresPermitidos: number;
+}
 
 export type SkillLevel = "PRINCIPIANTE" | "INTERMEDIO" | "AVANZADO";
 
@@ -9,19 +13,19 @@ export interface User {
     nombreUsuario: string;
     correo: string;
     contrasenia?: string;
-    deporteFavorito?: Sport;
+    deporteFavorito?: Deporte;
     nivel?: SkillLevel;
 }
 
 export interface Match {
     id: string | number;
-    deporte: Sport;
+    deporte: Deporte;
     cantidadJugadoresReq: number;
     duracionMinutos: number;
     ubicacion: string;
     horario: string; // ISO String without timezone Z might be sent locally 2026-03-01T19:00:00
     nivelRequerido?: SkillLevel;
     estadoActualType: MatchState;
-    jugadoresEnlistados?: User[];
-    creador: { id: string | number, nombreUsuario?: string };
+    jugadoresInscritos?: User[];
+    creador: User;
 }

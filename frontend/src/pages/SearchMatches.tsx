@@ -7,17 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 
-export default function Dashboard() {
+export default function SearchMatches() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         api.getMatches().then((data) => {
-            // Filter matches where the user (ID 1 for now) is enrolled
-            const userMatches = data.filter(match =>
-                match.jugadoresInscritos?.some(player => player.id === 1)
-            );
-            setMatches(userMatches);
+            setMatches(data);
             setLoading(false);
         });
     }, []);
@@ -57,8 +53,8 @@ export default function Dashboard() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Tus Partidos</h1>
-                <p className="text-textMuted">Estos son los partidos a los que estás inscripto.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Buscar Partido</h1>
+                <p className="text-textMuted">Explora los eventos disponibles y únete a los que prefieras.</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

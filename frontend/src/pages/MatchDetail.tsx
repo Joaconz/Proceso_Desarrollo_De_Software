@@ -58,7 +58,7 @@ export default function MatchDetail() {
         }
     };
 
-    const isFull = (match.jugadoresEnlistados?.length || 0) >= match.cantidadJugadoresReq;
+    const isFull = (match.jugadoresInscritos?.length || 0) >= match.cantidadJugadoresReq;
     const canJoin = !isFull && !joined && match.estadoActualType === "NECESITAMOS_JUGADORES";
 
     return (
@@ -66,7 +66,7 @@ export default function MatchDetail() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-bold text-white tracking-tight">{match.deporte}</h1>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{match.deporte.nombre}</h1>
                         <Badge variant="outline">{match.nivelRequerido || "Todos los niveles"}</Badge>
                     </div>
                     <p className="text-textMuted flex items-center gap-2">
@@ -77,7 +77,7 @@ export default function MatchDetail() {
                 <div className="flex items-center gap-4 bg-surface p-4 rounded-xl border border-border">
                     <div className="text-center">
                         <div className="text-2xl font-bold text-primary">
-                            {match.jugadoresEnlistados?.length || 0} <span className="text-textMuted text-lg font-normal">/ {match.cantidadJugadoresReq}</span>
+                            {match.jugadoresInscritos?.length || 0} <span className="text-textMuted text-lg font-normal">/ {match.cantidadJugadoresReq}</span>
                         </div>
                         <div className="text-xs text-textMuted uppercase tracking-wider">Jugadores</div>
                     </div>
@@ -151,14 +151,14 @@ export default function MatchDetail() {
                             <div>
                                 <CardTitle>Jugadores Confirmados</CardTitle>
                                 <CardDescription>
-                                    Faltan {Math.max(0, match.cantidadJugadoresReq - (match.jugadoresEnlistados?.length || 0))} jugadores
+                                    Faltan {Math.max(0, match.cantidadJugadoresReq - (match.jugadoresInscritos?.length || 0))} jugadores
                                 </CardDescription>
                             </div>
                             <Users className="h-5 w-5 text-textMuted" />
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {(match.jugadoresEnlistados || []).map((player, idx) => (
+                                {(match.jugadoresInscritos || []).map((player, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-border flex items-center justify-center font-bold text-primary">
@@ -179,7 +179,7 @@ export default function MatchDetail() {
                                     </div>
                                 ))}
 
-                                {Array.from({ length: Math.max(0, match.cantidadJugadoresReq - (match.jugadoresEnlistados?.length || 0)) }).map((_, idx) => (
+                                {Array.from({ length: Math.max(0, match.cantidadJugadoresReq - (match.jugadoresInscritos?.length || 0)) }).map((_, idx) => (
                                     <div key={`empty-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border/60 opacity-60">
                                         <div className="h-10 w-10 rounded-full bg-border/50 flex items-center justify-center">
                                             <Users className="h-5 w-5 text-textMuted" />

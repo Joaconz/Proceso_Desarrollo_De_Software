@@ -1,15 +1,17 @@
-import type { Match, User } from "../types";
+import type { Match, User, Deporte, SkillLevel } from "../types";
 
 export const api = {
     // ---- Usuarios ----
     login: async (credentials: any): Promise<User> => {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentials)
-        });
-        if (!response.ok) throw new Error("Login fallido");
-        return response.json();
+        // Backend doesn't have a login endpoint, mock it for now
+        // Simulate a successful login with a mock user
+        return {
+            id: 1,
+            nombreUsuario: credentials.correo.split('@')[0],
+            correo: credentials.correo,
+            deporteFavorito: { id: 1, nombre: "Futbol", cantidadJugadoresPermitidos: 22 },
+            nivel: "INTERMEDIO"
+        };
     },
 
     register: async (userData: any): Promise<User> => {
@@ -19,6 +21,19 @@ export const api = {
             body: JSON.stringify(userData)
         });
         if (!response.ok) throw new Error("Registro fallido");
+        return response.json();
+    },
+
+    // ---- Metadatos ----
+    getDeportes: async (): Promise<Deporte[]> => {
+        const response = await fetch('/api/metadata/deportes');
+        if (!response.ok) throw new Error("Error obteniendo deportes");
+        return response.json();
+    },
+
+    getNiveles: async (): Promise<SkillLevel[]> => {
+        const response = await fetch('/api/metadata/niveles');
+        if (!response.ok) throw new Error("Error obteniendo niveles");
         return response.json();
     },
 
@@ -45,7 +60,7 @@ export const api = {
         return response.json();
     },
 
-    joinMatch: async (matchId: string, userId: string | number): Promise<Match> => {
+    joinMatch: async (matchId: string | number, userId: string | number): Promise<Match> => {
         const response = await fetch(`/api/partidos/${matchId}/unirse/${userId}`, {
             method: 'POST'
         });
@@ -57,7 +72,7 @@ export const api = {
         return response.json();
     },
 
-    confirmMatch: async (matchId: string): Promise<Match> => {
+    confirmMatch: async (matchId: string | number): Promise<Match> => {
         const response = await fetch(`/api/partidos/${matchId}/confirmar`, {
             method: 'POST'
         });

@@ -8,6 +8,7 @@ import MatchDetail from './pages/MatchDetail'
 import CreateMatch from './pages/CreateMatch'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
+import SearchMatches from './pages/SearchMatches'
 // Import CSS
 import './index.css'
 
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <Dashboard />,
+      },
+      {
+        path: '/search',
+        element: <SearchMatches />,
       },
       {
         path: '/match/:id',
