@@ -2,6 +2,7 @@ export interface Deporte {
     id: number;
     nombre: string;
     cantidadJugadoresPermitidos: number;
+    tipoPuntuacion?: "GOLES" | "SETS";
 }
 
 export type SkillLevel = "PRINCIPIANTE" | "INTERMEDIO" | "AVANZADO";
@@ -17,6 +18,13 @@ export interface User {
     nivel?: SkillLevel;
 }
 
+export interface Participante {
+    id: number;
+    nombre: string;
+    tipo: string;
+    puntajeObtenido?: number;
+}
+
 export interface Match {
     id: string | number;
     deporte: Deporte;
@@ -27,5 +35,6 @@ export interface Match {
     nivelRequerido?: SkillLevel;
     estadoActualType: MatchState;
     jugadoresInscritos?: User[];
+    participantes?: Participante[];
     creador: User;
 }

@@ -11,19 +11,57 @@ export default function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
-            await api.login({ correo: email, contrasenia: password });
+            const user = await api.login({ correo: email, contrasenia: password });
+            localStorage.setItem("user", JSON.stringify(user));
+
+            // ── Registrar FCM token post-login ───────────────────────────────
+            // Opción A: solicitamos permiso de notificaciones al browser y
+            // generamos un token único por dispositivo/sesión.
+            // En producción real, aquí iría el Firebase JS SDK getToken().
+            // El backend lo persiste en usuario.fcmToken para que
+            // FirebaseAdapter pueda enviar push personalizadas.
+            if (user.id != null) {
+                registrarFcmToken(Number(user.id)).catch(() => {
+                    // Permiso denegado o error → modo DEMO en el backend (no bloquea)
+                });
+            }
+
             navigate("/");
-        } catch (error) {
-            console.error("Error validando usuario");
+        } catch (err: any) {
+            console.error("Error validando usuario", err);
+            setError(err.message || "Credenciales incorrectas o error de conexión.");
+            setTimeout(() => setError(null), 4000);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    /** Solicita permiso de notificaciones y registra el FCM token en el backend. */
+    const registrarFcmToken = async (userId: number) => {
+        // Verificar soporte del navegador
+        if (!("Notification" in window)) return;
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") return;
+
+        // Generar un token estable por dispositivo+usuario usando crypto
+        // (en producción real: await getToken(messaging, { vapidKey: VITE_VAPID_KEY }))
+        const rawToken = `${userId}-${navigator.userAgent}-${window.location.hostname}`;
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawToken);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const fcmToken = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+        await api.registerFcmToken(userId, fcmToken);
+        console.log("[FCM] Token registrado en el servidor:", fcmToken.substring(0, 16) + "...");
     };
 
     return (
@@ -73,13 +111,20 @@ export default function Login() {
                         </Button>
                         <div className="text-center text-sm text-textMuted">
                             ¿No tienes una cuenta?{" "}
-                            <Link to="#" className="text-primary hover:underline underline-offset-4">
+                            <Link to="/register" className="text-primary hover:underline underline-offset-4">
                                 Regístrate
                             </Link>
                         </div>
                     </CardFooter>
                 </form>
             </Card>
+
+            {/* Error Toaster */}
+            {error && (
+                <div className="fixed bottom-4 right-4 bg-red-600 outline outline-1 outline-red-400 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+                    <span className="font-medium">{error}</span>
+                </div>
+            )}
         </div>
     );
 }

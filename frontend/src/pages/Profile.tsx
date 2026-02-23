@@ -9,14 +9,16 @@ export default function Profile() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Mock user data
+    const storedStr = localStorage.getItem("user");
+    const storedUser = storedStr ? JSON.parse(storedStr) : null;
+
     const user = {
-        username: "joaquin",
-        email: "joaquin@ejemplo.com",
-        favoriteSport: "Futbol",
-        skillLevel: "Intermedio",
-        matchesPlayed: 14,
-        memberSince: "Febrero 2026"
+        username: storedUser?.nombreUsuario || "Usuario",
+        email: storedUser?.correo || "",
+        favoriteSport: storedUser?.deporteFavorito?.nombre || "",
+        skillLevel: storedUser?.nivel || "",
+        matchesPlayed: 0,
+        memberSince: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
     };
 
     const handleSaveProfile = (e: React.FormEvent) => {

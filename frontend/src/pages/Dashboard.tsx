@@ -13,11 +13,31 @@ export default function Dashboard() {
 
     useEffect(() => {
         api.getMatches().then((data) => {
-            // Filter matches where the user (ID 1 for now) is enrolled
+            const storedStr = localStorage.getItem("user");
+            const storedUser = storedStr ? JSON.parse(storedStr) : null;
+            const currentUserId = storedUser?.id || 1;
+
+            // Filter matches where the user is enrolled
             const userMatches = data.filter(match =>
-                match.jugadoresInscritos?.some(player => player.id === 1)
+                match.jugadoresInscritos?.some(player => player.id === currentUserId)
             );
+
+            // Sort: 1) Active matches first, finalized at the end. 2) Sorted by newest to oldest
+            userMatches.sort((a, b) => {
+                const aFinalizado = a.estadoActualType === "FINALIZADO" || a.estadoActualType === "CANCELADO" ? 1 : 0;
+                const bFinalizado = b.estadoActualType === "FINALIZADO" || b.estadoActualType === "CANCELADO" ? 1 : 0;
+
+                if (aFinalizado !== bFinalizado) {
+                    return aFinalizado - bFinalizado;
+                }
+
+                return new Date(b.horario).getTime() - new Date(a.horario).getTime();
+            });
+
             setMatches(userMatches);
+            setLoading(false);
+        }).catch((err) => {
+            console.error("Error al obtener partidos para el dashboard:", err);
             setLoading(false);
         });
     }, []);

@@ -11,12 +11,31 @@ export default function SearchMatches() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        api.getMatches().then((data) => {
-            setMatches(data);
+    const [isRecommended, setIsRecommended] = useState(false);
+
+    const loadMatches = (recommended: boolean) => {
+        setLoading(true);
+        const storedStr = localStorage.getItem("user");
+        const storedUser = storedStr ? JSON.parse(storedStr) : null;
+        const currentUserId = storedUser?.id || 1;
+
+        const request = recommended
+            ? api.getRecommendedMatches(currentUserId)
+            : api.getMatches();
+
+        request.then((data) => {
+            // Filtrar partidos que ya terminaron o se cancelaron
+            const activeMatches = data.filter((m: Match) =>
+                m.estadoActualType !== "FINALIZADO" && m.estadoActualType !== "CANCELADO"
+            );
+            setMatches(activeMatches);
             setLoading(false);
-        });
-    }, []);
+        }).catch(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadMatches(isRecommended);
+    }, [isRecommended]);
 
     const getStateColor = (state: Match["estadoActualType"]) => {
         switch (state) {
@@ -52,9 +71,19 @@ export default function SearchMatches() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Buscar Partido</h1>
-                <p className="text-textMuted">Explora los eventos disponibles y únete a los que prefieras.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Buscar Partido</h1>
+                    <p className="text-textMuted">Explora los eventos disponibles y únete a los que prefieras.</p>
+                </div>
+                <div>
+                    <Button
+                        variant={isRecommended ? "default" : "outline"}
+                        onClick={() => setIsRecommended(!isRecommended)}
+                    >
+                        {isRecommended ? "Ocultar partidos recomendados" : "Visualizar partidos recomendados"}
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

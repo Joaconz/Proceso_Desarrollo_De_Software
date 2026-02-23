@@ -35,14 +35,18 @@ export default function CreateMatch() {
         setIsLoading(true);
 
         try {
+            const storedStr = localStorage.getItem("user");
+            const storedUser = storedStr ? JSON.parse(storedStr) : null;
+            const currentUserId = storedUser?.id || 1;
+
             await api.createMatch({
                 deporte: { id: sportId },
                 cantidadJugadoresReq: requiredPlayers,
                 duracionMinutos: duration,
                 ubicacion: location,
-                horario: new Date(date).toISOString().slice(0, 19), // Format without Z as per backend specs
+                horario: date, // datetime-local ya está en formato ISO local — sin conversión UTC
                 nivelRequerido: minSkill || undefined,
-                creador: { id: 1 } // Simulated ID for now
+                creador: { id: currentUserId }
             });
             navigate("/");
         } catch (error) {

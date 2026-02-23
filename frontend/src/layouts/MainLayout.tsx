@@ -1,9 +1,15 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
 import { CopySlash, Home, PlusCircle, Search, User } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function MainLayout() {
     const location = useLocation();
+
+    // Check authentication
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+        return <Navigate to="/login" replace />;
+    }
 
     const navItems = [
         { name: "Dashboard", href: "/", icon: Home },
