@@ -44,6 +44,13 @@ export const api = {
             body: JSON.stringify({ fcmToken }),
         }),
 
+    actualizarPerfil: (userId: number | string, data: { deporteId?: number; nivel?: string }): Promise<User> =>
+        apiFetch(`/api/usuarios/${userId}/perfil`, {
+            method: "PUT",
+            headers: JSON_HEADERS,
+            body: JSON.stringify(data),
+        }),
+
     // ── Metadatos ─────────────────────────────────────────────────────────────
     getDeportes: (): Promise<Deporte[]> => apiFetch("/api/metadata/deportes"),
 
@@ -52,8 +59,8 @@ export const api = {
     // ── Partidos ──────────────────────────────────────────────────────────────
     getMatches: (): Promise<Match[]> => apiFetch("/api/partidos"),
 
-    getRecommendedMatches: (userId: string | number): Promise<Match[]> =>
-        apiFetch(`/api/usuarios/${userId}/buscar-partidos`),
+    getRecommendedMatches: (userId: string | number, algoritmo?: string): Promise<Match[]> =>
+        apiFetch(`/api/usuarios/${userId}/buscar-partidos?algoritmo=${algoritmo ?? "NIVEL"}`),
 
     getMatchById: (id: string): Promise<Match> =>
         apiFetch(`/api/partidos/${id}`),
@@ -107,4 +114,20 @@ export const api = {
                 puntajeVisitante: parseInt(data.puntajeVisitante) || 0,
             }),
         }),
+
+    /**
+     * Finaliza un duelo (partido de 2 jugadores) registrando sets/goles
+     * y cambiando el estado en una sola transacción.
+     * puntajes: Record<participanteId, valor>
+     */
+    finalizarDuelo: (matchId: string | number, puntajes: Record<number, string>): Promise<Match> => {
+        // Convertir keys a string para JSON (el backend acepta Map<String, String>)
+        const body: Record<string, string> = {};
+        Object.entries(puntajes).forEach(([k, v]) => { body[k] = v; });
+        return apiFetch(`/api/partidos/${matchId}/finalizar-duelo`, {
+            method: "POST",
+            headers: JSON_HEADERS,
+            body: JSON.stringify(body),
+        });
+    },
 };

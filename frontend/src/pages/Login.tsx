@@ -5,10 +5,12 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/Card";
 import { api } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { login: authLogin } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function Login() {
 
         try {
             const user = await api.login({ correo: email, contrasenia: password });
-            localStorage.setItem("user", JSON.stringify(user));
+            authLogin(user);
 
             // ── Registrar FCM token post-login ───────────────────────────────
             // Opción A: solicitamos permiso de notificaciones al browser y

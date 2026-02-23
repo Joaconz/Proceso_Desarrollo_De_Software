@@ -15,6 +15,8 @@ export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const [error, setError] = useState<string | null>(null);
+
     // Metadata States
     const [skillsOptions, setSkillsOptions] = useState<SkillLevel[]>([]);
     const [sportOptions, setSportsOptions] = useState<Deporte[]>([]);
@@ -31,6 +33,7 @@ export default function Register() {
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError(null);
 
         try {
             await api.register({
@@ -41,8 +44,10 @@ export default function Register() {
                 nivel: skillLevel || "PRINCIPIANTE" // default 
             });
             navigate("/login");
-        } catch (error) {
-            console.error("Error creating user");
+        } catch (err: any) {
+            console.error("Error creating user", err);
+            setError(err.message || "Error al crear la cuenta. Verifica tus datos.");
+            setTimeout(() => setError(null), 4000);
         } finally {
             setIsLoading(false);
         }
@@ -149,6 +154,13 @@ export default function Register() {
                     </CardFooter>
                 </form>
             </Card>
+
+            {/* Error Toaster */}
+            {error && (
+                <div className="fixed bottom-4 right-4 bg-red-600 outline outline-1 outline-red-400 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+                    <span className="font-medium">{error}</span>
+                </div>
+            )}
         </div>
     );
 }

@@ -6,16 +6,16 @@ import type { Match } from "../types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         api.getMatches().then((data) => {
-            const storedStr = localStorage.getItem("user");
-            const storedUser = storedStr ? JSON.parse(storedStr) : null;
-            const currentUserId = storedUser?.id || 1;
+            const currentUserId = user?.id || 1;
 
             // Filter matches where the user is enrolled
             const userMatches = data.filter(match =>

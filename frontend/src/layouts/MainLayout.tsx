@@ -1,13 +1,14 @@
 import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
 import { CopySlash, Home, PlusCircle, Search, User } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useAuth } from "../context/AuthContext";
 
 export default function MainLayout() {
     const location = useLocation();
+    const { user } = useAuth();
 
     // Check authentication
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+    if (!user) {
         return <Navigate to="/login" replace />;
     }
 

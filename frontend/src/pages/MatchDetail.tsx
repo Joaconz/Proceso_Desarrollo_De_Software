@@ -106,13 +106,19 @@ export default function MatchDetail() {
             if (isTeamMatch) {
                 updated = await api.finalizarConResultado(match.id, teamResult);
             } else {
+                // Partido 1v1: registrar sets/goles y finalizar en una sola llamada
+                // para garantizar que el DTO retorne puntajeObtenido correcto
                 if (!match.participantes) return;
-                for (const p of match.participantes) {
-                    await api.registrarPuntaje(match.id, p.id, scores[p.id] || "0");
-                }
-                updated = await api.finishMatch(match.id);
+                const puntajes: Record<number, string> = {};
+                match.participantes.forEach(p => {
+                    puntajes[p.id] = scores[p.id] || "0";
+                });
+                updated = await api.finalizarDuelo(match.id, puntajes);
             }
             setMatch(updated);
+            // Recarga desde la API para garantizar puntajeObtenido correcto
+            // (el response de finalizarDuelo puede llegar antes del flush JPA completo)
+            await loadMatch();
             setShowScoreModal(false);
             showToast("Partido finalizado y puntajes guardados con éxito.");
         } catch (e: any) {

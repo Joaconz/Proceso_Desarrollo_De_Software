@@ -5,10 +5,11 @@ import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/Card";
 import { api } from "../services/api";
 import type { Deporte, SkillLevel } from "../types";
-
+import { useAuth } from "../context/AuthContext";
 
 export default function CreateMatch() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
     // Metadata State
@@ -35,18 +36,14 @@ export default function CreateMatch() {
         setIsLoading(true);
 
         try {
-            const storedStr = localStorage.getItem("user");
-            const storedUser = storedStr ? JSON.parse(storedStr) : null;
-            const currentUserId = storedUser?.id || 1;
-
             await api.createMatch({
-                deporte: { id: sportId },
+                deporteId: sportId,
                 cantidadJugadoresReq: requiredPlayers,
                 duracionMinutos: duration,
                 ubicacion: location,
-                horario: date, // datetime-local ya está en formato ISO local — sin conversión UTC
-                nivelRequerido: minSkill || undefined,
-                creador: { id: currentUserId }
+                horario: date, // datetime-local ya está en formato ISO local
+                nivelRequerido: minSkill || null,
+                creadorId: user?.id || 1
             });
             navigate("/");
         } catch (error) {

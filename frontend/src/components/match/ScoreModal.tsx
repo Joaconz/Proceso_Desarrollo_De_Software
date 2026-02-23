@@ -106,15 +106,21 @@ export function ScoreModal({
                         <>
                             {match.participantes?.map((p) => (
                                 <div key={p.id} className="flex justify-between items-center bg-background p-3 rounded-lg border border-border">
-                                    <span className="font-medium text-white">{p.nombre}</span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        className="w-24 text-center font-bold"
-                                        placeholder="0"
-                                        value={scores[p.id] || ""}
-                                        onChange={(e) => onScoreChange(p.id, e.target.value)}
-                                    />
+                                    <div>
+                                        <span className="font-medium text-white block">{p.nombre}</span>
+                                        <span className="text-xs text-textMuted">{label} ganados</span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            className="w-24 text-center font-bold text-lg"
+                                            placeholder="0"
+                                            value={scores[p.id] || ""}
+                                            onChange={(e) => onScoreChange(p.id, e.target.value)}
+                                        />
+                                        <span className="text-xs text-textMuted">{label.toLowerCase()}</span>
+                                    </div>
                                 </div>
                             ))}
                             {(!match.participantes || match.participantes.length === 0) && (
