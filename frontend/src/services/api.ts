@@ -4,7 +4,6 @@ export const api = {
     // ---- Usuarios ----
     login: async (credentials: any): Promise<User> => {
         // Backend doesn't have a login endpoint, mock it for now
-        // Simulate a successful login with a mock user
         return {
             id: 1,
             nombreUsuario: credentials.correo.split('@')[0],
@@ -45,13 +44,9 @@ export const api = {
     },
 
     getMatchById: async (id: string): Promise<Match> => {
-        // Fallback: The backend GET /api/partidos/{id} endpoint throws a 500 error 
-        // due to Jackson infinite recursion on bidirectional bindings (Users <-> Match).
-        // Since getMatches() works cleanly without nested payload limits, we fetch and filter in-memory.
-        const allMatches = await api.getMatches();
-        const found = allMatches.find(m => m.id.toString() === id.toString());
-        if (!found) throw new Error("Match no encontrado");
-        return found;
+        const response = await fetch(`/api/partidos/${id}`);
+        if (!response.ok) throw new Error("Match no encontrado");
+        return response.json();
     },
 
     createMatch: async (matchData: any): Promise<Match> => {
@@ -68,7 +63,6 @@ export const api = {
         const response = await fetch(`/api/partidos/${matchId}/unirse/${userId}`, {
             method: 'POST'
         });
-
         if (!response.ok) {
             const errText = await response.text();
             throw new Error(errText || "Error uniéndose al partido");
@@ -83,6 +77,63 @@ export const api = {
         if (!response.ok) {
             const errText = await response.text();
             throw new Error(errText || "No se puede confirmar");
+        }
+        return response.json();
+    },
+
+    cancelMatch: async (matchId: string | number): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/cancelar`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede cancelar");
+        }
+        return response.json();
+    },
+
+    startMatch: async (matchId: string | number): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/iniciar`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede iniciar");
+        }
+        return response.json();
+    },
+
+    finishMatch: async (matchId: string | number): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/finalizar`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede finalizar");
+        }
+        return response.json();
+    },
+
+    leaveMatch: async (matchId: string | number, userId: string | number): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}/abandonar/${userId}`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede abandonar el partido");
+        }
+        return response.json();
+    },
+
+    editMatch: async (matchId: string | number, data: { ubicacion?: string; horario?: string; duracionMinutos?: number }): Promise<Match> => {
+        const response = await fetch(`/api/partidos/${matchId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "No se puede editar el partido");
         }
         return response.json();
     }
