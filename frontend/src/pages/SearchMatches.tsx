@@ -14,25 +14,25 @@ const ALGORITMOS: { id: Algoritmo; label: string; desc: string; icon: React.Elem
     {
         id: "NONE",
         label: "Todos",
-        desc: "Muestra todos los partidos disponibles sin filtrar.",
+        desc: "Todos los partidos abiertos.",
         icon: List,
     },
     {
         id: "NIVEL",
         label: "Por Nivel",
-        desc: "RF 5a / 5c — Solo partidos compatibles con tu nivel de juego.",
+        desc: "Partidos que coinciden con tu nivel.",
         icon: Brain,
     },
     {
         id: "CERCANIA",
         label: "Por Cercanía",
-        desc: "RF 5d — Partidos más próximos a tu ubicación registrada.",
+        desc: "Partidos en tu barrio preferido.",
         icon: MapIcon,
     },
     {
         id: "HISTORIAL",
         label: "Por Historial",
-        desc: "RF 5d — Partidos donde participan jugadores con quien ya jugaste.",
+        desc: "Partidos con jugadores experimentados.",
         icon: History,
     },
 ];
@@ -56,10 +56,19 @@ export default function SearchMatches() {
 
         request
             .then((data) => {
-                const activeMatches = data.filter(
-                    (m: Match) => m.estadoActualType !== "FINALIZADO" && m.estadoActualType !== "CANCELADO"
+                const LEVEL_ORDER: Record<string, number> = { PRINCIPIANTE: 0, INTERMEDIO: 1, AVANZADO: 2 };
+                const userLevel = user?.nivel ? LEVEL_ORDER[user.nivel] ?? 99 : 99;
+
+                let filtered = algo === "NONE"
+                    ? data.filter((m: Match) => m.estadoActualType === "NECESITAMOS_JUGADORES")
+                    : data;
+
+                // Filtrar partidos con nivel superior al del usuario
+                filtered = filtered.filter((m: Match) =>
+                    !m.nivelRequerido || (LEVEL_ORDER[m.nivelRequerido] ?? 0) <= userLevel
                 );
-                setMatches(activeMatches);
+
+                setMatches(filtered);
                 setLoading(false);
             })
             .catch((err) => {

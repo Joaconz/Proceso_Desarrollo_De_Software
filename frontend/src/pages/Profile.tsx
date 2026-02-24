@@ -14,17 +14,17 @@ export default function Profile() {
     const [isLoading, setIsLoading] = useState(false);
     const [deportes, setDeportes] = useState<Deporte[]>([]);
     const [niveles, setNiveles] = useState<string[]>([]);
+    const [barrios, setBarrios] = useState<string[]>([]);
     const [selectedDeporteId, setSelectedDeporteId] = useState<number | "">("");
     const [selectedNivel, setSelectedNivel] = useState<string>("");
+    const [selectedBarrio, setSelectedBarrio] = useState<string>("CUALQUIERA");
     const [message, setMessage] = useState<{ type: "error" | "success", text: string } | null>(null);
 
     useEffect(() => {
-        // Cargar metadata para los selectores
-        Promise.all([api.getDeportes(), api.getNiveles()]).then(([deps, nivs]) => {
+        Promise.all([api.getDeportes(), api.getNiveles(), api.getBarrios()]).then(([deps, nivs, barrs]) => {
             setDeportes(deps);
-            // El backend devuelve objetos tipo { name: "PRINCIPIANTE" } o strings directo 
-            // dependiendo de cómo esté configurado, asumo array de strings según UsuarioService.obtenerNiveles()
             setNiveles(nivs as unknown as string[]);
+            setBarrios(barrs);
         }).catch(err => console.error("Error cargando metadatos de perfil", err));
     }, []);
 
@@ -32,6 +32,7 @@ export default function Profile() {
         if (user) {
             setSelectedDeporteId(user.deporteFavorito?.id || "");
             setSelectedNivel(user.nivel || "");
+            setSelectedBarrio(user.barrio || "CUALQUIERA");
         }
     }, [user]);
 
@@ -52,6 +53,7 @@ export default function Profile() {
             const data: any = {};
             if (selectedDeporteId !== "") data.deporteId = Number(selectedDeporteId);
             if (selectedNivel !== "") data.nivel = selectedNivel;
+            if (selectedBarrio) data.barrio = selectedBarrio;
 
             const updatedUser = await api.actualizarPerfil(user.id!, data);
             login(updatedUser); // Actualizar context y localStorage
@@ -140,6 +142,21 @@ export default function Profile() {
                                         ))}
                                     </select>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white flex items-center gap-2">
+                                    Barrio Preferido
+                                </label>
+                                <select
+                                    value={selectedBarrio}
+                                    onChange={(e) => setSelectedBarrio(e.target.value)}
+                                    className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                >
+                                    {barrios.map(b => (
+                                        <option key={b} value={b}>{b === "CUALQUIERA" ? "Cualquiera" : b}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="pt-4 border-t border-border flex justify-end">

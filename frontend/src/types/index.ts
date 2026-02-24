@@ -16,6 +16,7 @@ export interface User {
     contrasenia?: string;
     deporteFavorito?: Deporte;
     nivel?: SkillLevel;
+    barrio?: string;
 }
 
 export interface Participante {
@@ -31,6 +32,7 @@ export interface Match {
     cantidadJugadoresReq: number;
     duracionMinutos: number;
     ubicacion: string;
+    barrio?: string;
     horario: string; // ISO String without timezone Z might be sent locally 2026-03-01T19:00:00
     nivelRequerido?: SkillLevel;
     estadoActualType: MatchState;

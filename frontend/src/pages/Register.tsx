@@ -20,14 +20,17 @@ export default function Register() {
     // Metadata States
     const [skillsOptions, setSkillsOptions] = useState<SkillLevel[]>([]);
     const [sportOptions, setSportsOptions] = useState<Deporte[]>([]);
+    const [barrioOptions, setBarrioOptions] = useState<string[]>([]);
 
     // Dropdown fields
     const [favoriteSportId, setFavoriteSportId] = useState<number | "">("");
     const [skillLevel, setSkillLevel] = useState<SkillLevel | "">("");
+    const [barrio, setBarrio] = useState("CUALQUIERA");
 
     useEffect(() => {
         api.getDeportes().then(setSportsOptions).catch(console.error);
         api.getNiveles().then(setSkillsOptions).catch(console.error);
+        api.getBarrios().then(setBarrioOptions).catch(console.error);
     }, []);
 
     const onSubmit = async (e: React.FormEvent) => {
@@ -41,7 +44,8 @@ export default function Register() {
                 correo: email,
                 contrasenia: password,
                 deporteFavorito: favoriteSportId ? { id: favoriteSportId } : undefined,
-                nivel: skillLevel || "PRINCIPIANTE" // default 
+                nivel: skillLevel || "PRINCIPIANTE", // default
+                barrio: barrio
             });
             navigate("/login");
         } catch (err: any) {
@@ -138,6 +142,21 @@ export default function Register() {
                                     ))}
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none text-white">
+                                Barrio Preferido
+                            </label>
+                            <select
+                                className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                value={barrio}
+                                onChange={(e) => setBarrio(e.target.value)}
+                            >
+                                {barrioOptions.map(b => (
+                                    <option key={b} value={b}>{b === "CUALQUIERA" ? "Cualquiera" : b}</option>
+                                ))}
+                            </select>
                         </div>
 
                     </CardContent>

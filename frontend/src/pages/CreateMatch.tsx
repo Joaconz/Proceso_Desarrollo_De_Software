@@ -15,11 +15,13 @@ export default function CreateMatch() {
     // Metadata State
     const [sportsOptions, setSportsOptions] = useState<Deporte[]>([]);
     const [skillsOptions, setSkillsOptions] = useState<SkillLevel[]>([]);
+    const [barrioOptions, setBarrioOptions] = useState<string[]>([]);
 
     // Form State
     const [sportId, setSportId] = useState<number | "">("");
     const [requiredPlayers, setRequiredPlayers] = useState(10);
     const [location, setLocation] = useState("");
+    const [barrio, setBarrio] = useState("CUALQUIERA");
     const [date, setDate] = useState("");
     const [duration, setDuration] = useState(60);
     const [minSkill, setMinSkill] = useState<SkillLevel | "">("");
@@ -27,6 +29,7 @@ export default function CreateMatch() {
     useEffect(() => {
         api.getDeportes().then(setSportsOptions).catch(console.error);
         api.getNiveles().then(setSkillsOptions).catch(console.error);
+        api.getBarrios().then(setBarrioOptions).catch(console.error);
     }, []);
 
     const onSubmit = async (e: React.FormEvent) => {
@@ -43,6 +46,7 @@ export default function CreateMatch() {
                 ubicacion: location,
                 horario: date, // datetime-local ya está en formato ISO local
                 nivelRequerido: minSkill || null,
+                barrio: barrio,
                 creadorId: user?.id || 1
             });
             navigate("/");
@@ -107,15 +111,29 @@ export default function CreateMatch() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-white">Ubicación</label>
-                            <Input
-                                type="text"
-                                placeholder="Ej: Cancha El Trébol, Palermo"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                required
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white">Ubicación</label>
+                                <Input
+                                    type="text"
+                                    placeholder="Ej: Cancha El Trébol"
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white">Barrio</label>
+                                <select
+                                    className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                    value={barrio}
+                                    onChange={(e) => setBarrio(e.target.value)}
+                                >
+                                    {barrioOptions.map(b => (
+                                        <option key={b} value={b}>{b === "CUALQUIERA" ? "Cualquiera" : b}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -155,7 +173,13 @@ export default function CreateMatch() {
                                         />
                                         <span className="text-sm text-textMuted">Cualquiera</span>
                                     </label>
-                                    {skillsOptions.map(skill => (
+                                    {skillsOptions
+                                        .filter(skill => {
+                                            if (!user?.nivel) return true;
+                                            const order: Record<string, number> = { PRINCIPIANTE: 0, INTERMEDIO: 1, AVANZADO: 2 };
+                                            return (order[skill] ?? 0) <= (order[user.nivel] ?? 0);
+                                        })
+                                        .map(skill => (
                                         <label key={skill} className="flex items-center gap-2 cursor-pointer">
                                             <input
                                                 type="radio"

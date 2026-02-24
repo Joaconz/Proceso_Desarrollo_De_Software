@@ -44,7 +44,7 @@ export const api = {
             body: JSON.stringify({ fcmToken }),
         }),
 
-    actualizarPerfil: (userId: number | string, data: { deporteId?: number; nivel?: string }): Promise<User> =>
+    actualizarPerfil: (userId: number | string, data: { deporteId?: number; nivel?: string; barrio?: string }): Promise<User> =>
         apiFetch(`/api/usuarios/${userId}/perfil`, {
             method: "PUT",
             headers: JSON_HEADERS,
@@ -55,6 +55,8 @@ export const api = {
     getDeportes: (): Promise<Deporte[]> => apiFetch("/api/metadata/deportes"),
 
     getNiveles: (): Promise<SkillLevel[]> => apiFetch("/api/metadata/niveles"),
+
+    getBarrios: (): Promise<string[]> => apiFetch("/api/metadata/barrios"),
 
     // ── Partidos ──────────────────────────────────────────────────────────────
     getMatches: (): Promise<Match[]> => apiFetch("/api/partidos"),
